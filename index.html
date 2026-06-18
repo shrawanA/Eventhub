@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Complete Event Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8; --primary-lighter: #e0e7ff;
+            --secondary: #ec4899; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --dark: #0f172a; --gray-900: #1e293b; --gray-800: #334155; --gray-700: #475569;
+            --gray-600: #64748b; --gray-500: #94a3b8; --gray-400: #cbd5e1; --gray-300: #e2e8f0;
+            --gray-200: #f1f5f9; --gray-100: #f8fafc; --white: #ffffff; --bg: #f8fafc; --surface: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem;
+            --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+            --space-20: 5rem; --space-24: 6rem; --container-width: 1280px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --radius: 0.5rem; --radius-md: 0.75rem; --radius-lg: 1rem; --radius-xl: 1.5rem; --radius-full: 9999px;
+            --transition: 200ms ease;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-family); background: var(--bg); color: var(--gray-900); line-height: 1.6; }
+        .container { max-width: var(--container-width); margin: 0 auto; padding: 0 var(--space-6); }
+
+        /* Navbar */
+        .navbar { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--gray-200); position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; height: 72px; }
+        .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: var(--space-3); cursor: pointer; }
+        .logo i { font-size: 1.75rem; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; list-style: none; gap: var(--space-2); }
+        .nav-links a { text-decoration: none; color: var(--gray-600); font-weight: 500; font-size: 0.875rem; padding: var(--space-2) var(--space-4); border-radius: var(--radius); transition: all var(--transition); cursor: pointer; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); background: var(--primary-lighter); }
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-700); padding: var(--space-2); }
+
+        /* Hero */
+        .hero { background: linear-gradient(135deg, var(--dark) 0%, var(--gray-900) 50%, var(--primary-dark) 100%); color: white; padding: calc(72px + 6rem) 0 6rem; text-align: center; }
+        .hero h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800; margin-bottom: var(--space-6); }
+        .hero h1 span { background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 1.125rem; opacity: 0.8; max-width: 600px; margin: 0 auto var(--space-10); }
+        .hero-buttons { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
+        .hero-stats { display: flex; justify-content: center; gap: 4rem; margin-top: 4rem; padding-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .hero-stat h3 { font-size: 2rem; font-weight: 800; }
+        .hero-stat p { opacity: 0.6; font-size: 0.875rem; }
+
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-radius: var(--radius); font-weight: 600; font-size: 0.875rem; cursor: pointer; border: 2px solid transparent; transition: all var(--transition); text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn-secondary { background: white; color: var(--primary); border-color: var(--primary); }
+        .btn-secondary:hover { background: var(--primary-lighter); }
+        .btn-ghost { background: transparent; color: var(--gray-700); border-color: var(--gray-300); }
+        .btn-ghost:hover { background: var(--gray-100); }
+        .btn-lg { padding: var(--space-4) var(--space-8); font-size: 1rem; }
+
+        /* Sections */
+        .section-header { text-align: center; margin-bottom: var(--space-12); }
+        .section-header h2 { font-size: clamp(1.875rem, 3vw, 2.25rem); font-weight: 800; margin-bottom: var(--space-4); }
+        .section-header p { color: var(--gray-600); font-size: 1.125rem; max-width: 600px; margin: 0 auto; }
+        .section-badge { display: inline-flex; align-items: center; gap: var(--space-2); background: var(--primary-lighter); color: var(--primary-dark); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-4); }
+
+        /* Events Grid */
+        .events-section { padding: 5rem 0; }
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-8); }
+        .event-card { background: var(--surface); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow); transition: all var(--transition); border: 1px solid var(--gray-200); }
+        .event-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-xl); }
+        .event-image-wrapper { position: relative; height: 220px; overflow: hidden; }
+        .event-image { width: 100%; height: 100%; object-fit: cover; transition: transform 300ms; }
+        .event-card:hover .event-image { transform: scale(1.05); }
+        .event-price-tag { position: absolute; top: var(--space-4); right: var(--space-4); background: rgba(255,255,255,0.95); padding: var(--space-2) var(--space-4); border-radius: var(--radius); font-weight: 700; font-size: 0.875rem; }
+        .event-price-tag.free { background: var(--success); color: white; }
+        .event-category-tag { position: absolute; bottom: var(--space-4); left: var(--space-4); }
+        .event-content { padding: var(--space-6); }
+        .event-title { font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-3); }
+        .event-meta { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
+        .event-meta-item { display: flex; align-items: center; gap: var(--space-3); color: var(--gray-600); font-size: 0.875rem; }
+        .event-meta-item i { color: var(--primary); width: 20px; }
+        .event-footer { display: flex; justify-content: space-between; padding-top: var(--space-4); border-top: 1px solid var(--gray-200); }
+        .event-attendees { color: var(--gray-600); font-size: 0.875rem; }
+        .status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--success); display: inline-block; margin-right: var(--space-2); }
+        .btn-register { display: block; width: 100%; margin-top: var(--space-4); padding: var(--space-3); background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: var(--radius-lg); font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+        /* Features */
+        .features-section { padding: 5rem 0; background: var(--surface); }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-8); }
+        .feature-card { text-align: center; padding: var(--space-10) var(--space-8); border-radius: var(--radius-xl); background: var(--bg); border: 1px solid var(--gray-200); transition: all var(--transition); }
+        .feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .feature-icon { width: 64px; height: 64px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--primary-light) 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-6); font-size: 1.5rem; color: var(--primary); }
+        .feature-card:hover .feature-icon { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; }
+        .feature-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-3); }
+        .feature-card p { color: var(--gray-600); }
+
+        /* CTA */
+        .cta-section { padding: 6rem 0; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; text-align: center; }
+        .cta-section h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: var(--space-4); }
+        .cta-section p { font-size: 1.125rem; opacity: 0.9; max-width: 600px; margin: 0 auto var(--space-10); }
+        .cta-section .btn { background: white; color: var(--primary); }
+
+        /* Dashboard */
+        .dashboard-page { padding: calc(72px + 2rem) 0 6rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-12); }
+        .stat-card { background: var(--surface); padding: var(--space-6); border-radius: var(--radius-xl); display: flex; align-items: center; gap: var(--space-5); box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+        .stat-icon { width: 56px; height: 56px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .stat-icon.blue { background: var(--primary-lighter); color: var(--primary); }
+        .stat-icon.green { background: #d1fae5; color: var(--success); }
+        .stat-icon.orange { background: #fef3c7; color: var(--warning); }
+        .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+        .stat-info h3 { font-size: 1.875rem; font-weight: 800; }
+        .stat-info p { color: var(--gray-500); font-size: 0.875rem; }
+        .dashboard-section { background: var(--surface); padding: var(--space-8); border-radius: var(--radius-xl); box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+        .section-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-8); }
+        .events-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .events-table th { text-align: left; padding: var(--space-4) var(--space-6); color: var(--gray-600); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; border-bottom: 2px solid var(--gray-200); }
+        .events-table td { padding: var(--space-4) var(--space-6); border-bottom: 1px solid var(--gray-200); }
+        .badge { display: inline-flex; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .badge-primary { background: var(--primary-lighter); color: var(--primary-dark); }
+        .badge-success { background: #d1fae5; color: var(--success); }
+        .badge-danger { background: #fee2e2; color: var(--danger); }
+
+        /* Create Event Form */
+        .create-event-page { padding: calc(72px + 3rem) 0 6rem; }
+        .event-form { max-width: 800px; margin: 0 auto; }
+        .form-section { background: var(--surface); padding: var(--space-8); border-radius: var(--radius-xl); margin-bottom: var(--space-6); box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+        .form-section-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-8); padding-bottom: var(--space-4); border-bottom: 2px solid var(--gray-200); }
+        .form-section-header i { width: 40px; height: 40px; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--primary-light) 100%); display: flex; align-items: center; justify-content: center; color: var(--primary); }
+        .form-section-header h3 { font-size: 1.125rem; font-weight: 700; }
+        .form-group { margin-bottom: var(--space-6); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+        label { display: block; font-weight: 600; margin-bottom: var(--space-2); color: var(--gray-700); font-size: 0.875rem; }
+        .required { color: var(--danger); }
+        input, select, textarea { width: 100%; padding: var(--space-3) var(--space-4); border: 2px solid var(--gray-200); border-radius: var(--radius-lg); font-size: 0.875rem; font-family: inherit; background: var(--gray-100); transition: all var(--transition); }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 3px var(--primary-lighter); }
+        textarea { resize: vertical; min-height: 120px; }
+        .form-hint { display: block; margin-top: var(--space-2); color: var(--gray-500); font-size: 0.75rem; }
+        .radio-group { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+        .radio-label { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 2px solid var(--gray-200); background: var(--gray-100); }
+        .radio-label:has(input:checked) { border-color: var(--primary); background: var(--primary-lighter); color: var(--primary-dark); }
+        .color-picker { display: flex; gap: var(--space-3); }
+        .color-option input { display: none; }
+        .color-circle { display: block; width: 40px; height: 40px; border-radius: var(--radius-full); border: 3px solid transparent; cursor: pointer; }
+        .color-option input:checked + .color-circle { border-color: var(--gray-900); transform: scale(1.1); }
+        .form-actions { display: flex; gap: var(--space-4); justify-content: center; margin-top: var(--space-10); padding-top: var(--space-8); border-top: 2px solid var(--gray-200); }
+
+        /* Toast */
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
+        .toast { background: var(--surface); padding: 16px 20px; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); display: flex; align-items: center; gap: 12px; font-weight: 500; margin-bottom: 10px; animation: slideIn 0.3s ease; border-left: 4px solid var(--success); color: var(--success); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Footer */
+        footer { background: var(--gray-900); color: var(--gray-400); padding: var(--space-12) 0; }
+        .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-10); margin-bottom: var(--space-10); }
+        .footer-brand h3 { color: white; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: var(--space-3); }
+        .footer-brand p { color: var(--gray-500); font-size: 0.875rem; line-height: 1.7; }
+        .footer-links h4 { color: white; font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-4); text-transform: uppercase; }
+        .footer-links ul { list-style: none; }
+        .footer-links li { margin-bottom: var(--space-3); }
+        .footer-links a { color: var(--gray-500); text-decoration: none; font-size: 0.875rem; cursor: pointer; }
+        .footer-links a:hover { color: var(--primary-light); }
+        .footer-bottom { border-top: 1px solid var(--gray-800); padding-top: var(--space-6); display: flex; justify-content: space-between; align-items: center; }
+        .footer-bottom p { font-size: 0.875rem; color: var(--gray-600); }
+        .footer-social { display: flex; gap: var(--space-4); }
+        .footer-social a { width: 36px; height: 36px; border-radius: var(--radius); background: var(--gray-800); display: flex; align-items: center; justify-content: center; color: var(--gray-400); text-decoration: none; }
+        .footer-social a:hover { background: var(--primary); color: white; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; position: fixed; top: 72px; left: 0; right: 0; background: white; flex-direction: column; padding: var(--space-6); box-shadow: var(--shadow-lg); }
+            .nav-links.active { display: flex; }
+            .mobile-menu-btn { display: block; }
+            .hero-stats { flex-direction: column; gap: var(--space-6); }
+            .events-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+            .footer-content { grid-template-columns: 1fr; text-align: center; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+        }
+    
+        /* Professional Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Skeleton Loading */
+        .skeleton { background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-300) 50%, var(--gray-200) 75%); background-size: 1000px 100%; animation: shimmer 2s infinite linear; border-radius: var(--radius); }
+        .skeleton-card { height: 300px; margin-bottom: 1rem; }
+        .skeleton-text { height: 20px; margin-bottom: 0.5rem; }
+        .skeleton-title { height: 30px; width: 60%; margin-bottom: 1rem; }
+
+        /* Dark Mode */
+        body.dark-mode { --bg: #0f172a; --surface: #1e293b; --gray-900: #f1f5f9; --gray-800: #e2e8f0; --gray-700: #cbd5e1; --gray-600: #94a3b8; --gray-500: #64748b; --gray-400: #475569; --gray-300: #334155; --gray-200: #1e293b; --gray-100: #0f172a; }
+        body.dark-mode .navbar { background: rgba(15, 23, 42, 0.95); border-bottom-color: #334155; }
+        body.dark-mode .hero { background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%); }
+        body.dark-mode .features-section { background: var(--surface); }
+        body.dark-mode .cta-section { background: linear-gradient(135deg, #3730a3 0%, #312e81 100%); }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle { width: 44px; height: 24px; background: var(--gray-300); border-radius: var(--radius-full); position: relative; cursor: pointer; transition: all var(--transition); border: none; }
+        .dark-mode-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all var(--transition); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .dark-mode-toggle.active { background: var(--primary); }
+        .dark-mode-toggle.active::after { left: 22px; }
+        .dark-mode-toggle i { position: absolute; top: 50%; transform: translateY(-50%); font-size: 10px; z-index: 1; }
+        .dark-mode-toggle .fa-sun { left: 6px; color: var(--warning); }
+        .dark-mode-toggle .fa-moon { right: 6px; color: white; }
+
+        /* Page Transitions */
+        .page-transition { animation: fadeInUp 0.4s ease-out; }
+        .page-transition-slide { animation: slideInRight 0.4s ease-out; }
+
+        /* Counter Animation */
+        .counter { display: inline-block; transition: all 0.3s ease; }
+        .counter.animated { transform: scale(1.1); color: var(--primary); }
+
+        /* Progress Bar for Toast */
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--success); animation: progress 3s linear forwards; }
+        @keyframes progress { from { width: 100%; } to { width: 0%; } }
+
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 2000; display: none; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface); border-radius: var(--radius-2xl); max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-xl); animation: scaleIn 0.3s ease; position: relative; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; width: 40px; height: 40px; border-radius: 50%; background: var(--gray-100); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: var(--gray-600); transition: all var(--transition); z-index: 10; }
+        .modal-close:hover { background: var(--danger-light); color: var(--danger); transform: rotate(90deg); }
+
+        /* QR Code Container */
+        .qr-container { display: flex; justify-content: center; padding: 2rem; background: white; border-radius: var(--radius-lg); }
+        .qr-container canvas { border-radius: var(--radius); }
+
+        /* Chart Container */
+        .chart-container { background: var(--surface); padding: 2rem; border-radius: var(--radius-xl); box-shadow: var(--shadow); border: 1px solid var(--gray-200); margin-bottom: 2rem; }
+        .chart-container canvas { max-height: 300px; }
+
+        /* Autocomplete Dropdown */
+        .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 2px solid var(--primary-light); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 100; max-height: 300px; overflow-y: auto; display: none; }
+        .autocomplete-dropdown.active { display: block; }
+        .autocomplete-item { padding: 0.75rem 1rem; cursor: pointer; transition: all var(--transition); border-bottom: 1px solid var(--gray-200); }
+        .autocomplete-item:hover { background: var(--primary-lighter); color: var(--primary-dark); }
+        .autocomplete-item:last-child { border-bottom: none; }
+
+        /* Floating Action Button */
+        .fab { position: fixed; bottom: 2rem; right: 2rem; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none; cursor: pointer; box-shadow: var(--shadow-xl); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all var(--transition); z-index: 999; }
+        .fab:hover { transform: scale(1.1) rotate(90deg); }
+
+        /* Badge with animation */
+        .badge-animated { animation: pulse 2s infinite; }
+
+        /* Glass morphism card */
+        .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); }
+        body.dark-mode .glass-card { background: rgba(30, 41, 59, 0.7); border-color: rgba(255,255,255,0.1); }
+
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<base target="_blank">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a onclick="showPage('home')" class="logo"><i class="fas fa-calendar-star"></i> EventHub</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a onclick="showPage('home')" id="navHome" class="active">Home</a></li>
+                <li><a onclick="showPage('events')" id="navEvents">Events</a></li>
+                <li><a onclick="showPage('create')" id="navCreate">Create Event</a></li>
+                <li><a onclick="showPage('dashboard')" id="navDashboard">Dashboard</a></li>
+            </ul>
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()" id="darkModeToggle" title="Toggle Dark Mode">
+                <i class="fas fa-sun"></i>
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
+        </div>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="pageHome">
+        <header class="hero">
+            <div class="container">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 0.5rem 1.25rem; border-radius: var(--radius-full); font-size: 0.875rem; margin-bottom: 2rem;">
+                    <i class="fas fa-sparkles"></i> 10+ Events Available Now
+                </div>
+                <h1>Plan, Promote & <span>Manage Events</span></h1>
+                <p>Create unforgettable experiences with our all-in-one event management platform.</p>
+                <div class="hero-buttons">
+                    <button onclick="showPage('create')" class="btn btn-primary btn-lg"><i class="fas fa-plus-circle"></i> Create Your Event</button>
+                    <button onclick="showPage('events')" class="btn btn-secondary btn-lg"><i class="fas fa-compass"></i> Explore Events</button>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat"><h3>10+</h3><p>Active Events</p></div>
+                    <div class="hero-stat"><h3>5K+</h3><p>Happy Attendees</p></div>
+                    <div class="hero-stat"><h3>8</h3><p>Categories</p></div>
+                </div>
+            </div>
+        </header>
+
+        <section class="events-section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-fire"></i> Trending Now</span>
+                    <h2>Featured Events</h2>
+                    <p>Discover the most popular events happening near you</p>
+                </div>
+                <div class="events-grid" id="featuredEvents"></div>
+                <div style="text-align: center; margin-top: 3rem;">
+                    <button onclick="showPage('events')" class="btn btn-primary btn-lg">View All Events <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-star"></i> Why Choose Us</span>
+                    <h2>Everything You Need</h2>
+                    <p>Powerful features to make your events unforgettable</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-calendar-plus"></i></div>
+                        <h3>Easy Planning</h3>
+                        <p>Create events in minutes with our intuitive form.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-bullhorn"></i></div>
+                        <h3>Powerful Promotion</h3>
+                        <p>Share your events with built-in social tools.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h3>Real-time Analytics</h3>
+                        <p>Track registrations and revenue with our dashboard.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <h3>Smart Registration</h3>
+                        <p>Collect attendee info and issue digital tickets.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <h3>Mobile Friendly</h3>
+                        <p>Your events look great on any device.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3>Secure & Private</h3>
+                        <p>All data stays in your browser.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container">
+                <h2>Ready to Host Your Event?</h2>
+                <p>Join thousands of event organizers who trust EventHub.</p>
+                <button onclick="showPage('create')" class="btn btn-lg"><i class="fas fa-rocket"></i> Get Started Free</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- EVENTS PAGE -->
+    <div id="pageEvents" style="display: none;">
+        <div style="padding: calc(72px + 3rem) 0 6rem;">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-search"></i> Find Your Next Event</span>
+                    <h1>Discover Events</h1>
+                    <p>Browse through our curated collection of events</p>
+                </div>
+                <div style="background: var(--surface); padding: 1.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow); border: 1px solid var(--gray-200); margin-bottom: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 280px; position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-500);"></i>
+                        <input type="text" id="searchInput" placeholder="Search events..." onkeyup="filterEvents()" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;">
+                    </div>
+                    <select id="categoryFilter" onchange="filterEvents()" style="min-width: 180px;">
+                        <option value="">All Categories</option>
+                        <option value="music">Music & Concerts</option>
+                        <option value="sports">Sports & Fitness</option>
+                        <option value="business">Business</option>
+                        <option value="food">Food & Drink</option>
+                        <option value="arts">Arts & Culture</option>
+                        <option value="tech">Technology</option>
+                        <option value="education">Education</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="priceFilter" onchange="filterEvents()" style="min-width: 180px;">
+                        <option value="">Any Price</option>
+                        <option value="free">Free</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+                <div class="events-grid" id="allEvents"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE EVENT PAGE -->
+    <div id="pageCreate" style="display: none;">
+        <div class="create-event-page">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-plus-circle"></i> Create New</span>
+                    <h1>Create Your Event</h1>
+                    <p>Fill in the details below to create your amazing event</p>
+                </div>
+                <form id="createEventForm" class="event-form" onsubmit="handleCreateEvent(event)">
+                    <div class="form-section">
+                        <div class="form-section-header"><i class="fas fa-info-circle"></i><h3>Basic Information</h3></div>
+                        <div class="form-group">
+                            <label>Event Title <span class="required">*</span></label>
+                            <input type="text" name="title" required placeholder="e.g., Summer Music Festival 2026">
+                        </div>
+                        <div class="form-group">
+                            <label>Category <span class="required">*</span></label>
+                            <select name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="music">Music & Concerts</option>
+                                <option value="sports">Sports & Fitness</option>
+                                <option value="business">Business & Networking</option>
+                                <option value="food">Food & Drink</option>
+                                <option value="arts">Arts & Culture</option>
+                                <option value="tech">Technology</option>
+                                <option value="education">Education</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description <span class="required">*</span></label>
+                            <textarea name="description" rows="5" required placeholder="Describe your event..."></textarea>
+                            <span class="form-hint">Minimum 50 characters recommended</span>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-header"><i class="fas fa-clock"></i><h3>Date & Time</h3></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date <span class="required">*</span></label>
+                                <input type="date" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Time <span class="required">*</span></label>
+                                <input type="time" name="time" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration</label>
+                            <select name="duration">
+                                <option value="1">1 hour</option>
+                                <option value="2">2 hours</option>
+                                <option value="3">3 hours</option>
+                                <option value="4">4 hours</option>
+                                <option value="all-day">All day</option>
+                                <option value="multiple">Multiple days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-header"><i class="fas fa-map-marker-alt"></i><h3>Location</h3></div>
+                        <div class="form-group">
+                            <label>Venue Name <span class="required">*</span></label>
+                            <input type="text" name="location" required placeholder="e.g., Central Park Amphitheater">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input type="text" name="address" placeholder="Full street address (optional)">
+                        </div>
+                        <div class="form-group">
+                            <label>Event Type</label>
+                            <div class="radio-group">
+                                <label class="radio-label"><input type="radio" name="eventType" value="in-person" checked><span>In-Person</span></label>
+                                <label class="radio-label"><input type="radio" name="eventType" value="online"><span>Online</span></label>
+                                <label class="radio-label"><input type="radio" name="eventType" value="hybrid"><span>Hybrid</span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-header"><i class="fas fa-ticket-alt"></i><h3>Tickets & Capacity</h3></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Ticket Price (₹)</label>
+                                <input type="number" name="price" min="0" value="0" placeholder="0 for free events">
+                                <span class="form-hint">Leave as 0 for free events</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Maximum Attendees</label>
+                                <input type="number" name="capacity" min="1" placeholder="Leave blank for unlimited">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-header"><i class="fas fa-palette"></i><h3>Customization</h3></div>
+                        <div class="form-group">
+                            <label>Event Color Theme</label>
+                            <div class="color-picker">
+                                <label class="color-option"><input type="radio" name="themeColor" value="#6366f1" checked><span class="color-circle" style="background: #6366f1;"></span></label>
+                                <label class="color-option"><input type="radio" name="themeColor" value="#ec4899"><span class="color-circle" style="background: #ec4899;"></span></label>
+                                <label class="color-option"><input type="radio" name="themeColor" value="#10b981"><span class="color-circle" style="background: #10b981;"></span></label>
+                                <label class="color-option"><input type="radio" name="themeColor" value="#f59e0b"><span class="color-circle" style="background: #f59e0b;"></span></label>
+                                <label class="color-option"><input type="radio" name="themeColor" value="#ef4444"><span class="color-circle" style="background: #ef4444;"></span></label>
+                                <label class="color-option"><input type="radio" name="themeColor" value="#8b5cf6"><span class="color-circle" style="background: #8b5cf6;"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-plus-circle"></i> Create Event</button>
+                        <button type="button" onclick="showPage('home')" class="btn btn-ghost btn-lg">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="pageDashboard" style="display: none;">
+        <div class="dashboard-page">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-chart-line"></i> Analytics</span>
+                    <h1>My Dashboard</h1>
+                    <p>Track your events, registrations, and performance</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue"><i class="fas fa-calendar"></i></div>
+                        <div class="stat-info"><h3 id="totalEvents">0</h3><p>Total Events</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                        <div class="stat-info"><h3 id="totalAttendees">0</h3><p>Total Attendees</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange"><i class="fas fa-rupee-sign"></i></div>
+                        <div class="stat-info"><h3 id="totalRevenue">₹0</h3><p>Est. Revenue</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple"><i class="fas fa-clock"></i></div>
+                        <div class="stat-info"><h3 id="upcomingEvents">0</h3><p>Upcoming Events</p></div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 1rem; color: var(--gray-900);"><i class="fas fa-chart-pie" style="color: var(--primary); margin-right: 0.5rem;"></i> Revenue by Category</h3>
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <div class="section-header-bar">
+                        <h2><i class="fas fa-list" style="color: var(--primary); margin-right: 0.75rem;"></i> My Events</h2>
+                        <button onclick="showPage('create')" class="btn btn-primary"><i class="fas fa-plus"></i> New Event</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="events-table">
+                            <thead>
+                                <tr><th>Event</th><th>Date</th><th>Category</th><th>Attendees</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="dashboardTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- REGISTRATION PAGE -->
+    <div id="pageRegistration" style="display: none;">
+        <div style="padding: calc(72px + 3rem) 0 6rem;">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-badge"><i class="fas fa-ticket-alt"></i> Registration</span>
+                    <h1>Event Registration</h1>
+                    <p>Complete your registration below</p>
+                </div>
+                <div style="display: grid; grid-template-columns: 380px 1fr; gap: 2rem; max-width: 1100px; margin: 0 auto;">
+                    <div style="background: var(--surface); border-radius: var(--radius-xl); padding: 2rem; box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200); position: sticky; top: 90px; height: fit-content;">
+                        <img id="regEventImage" src="" alt="Event" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-lg); margin-bottom: 1rem;">
+                        <h2 id="regEventTitle" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--gray-200);">Event Title</h2>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-calendar" style="color: var(--primary); width: 24px;"></i>
+                                <span id="regEventDate">Date</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-clock" style="color: var(--primary); width: 24px;"></i>
+                                <span id="regEventTime">Time</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-map-marker-alt" style="color: var(--primary); width: 24px;"></i>
+                                <span id="regEventLocation">Location</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-ticket-alt" style="color: var(--primary); width: 24px;"></i>
+                                <strong id="regEventPrice" style="color: var(--gray-900); margin-left: auto;">Price</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="registrationForm" style="background: var(--surface); padding: 2.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200);" onsubmit="handleRegistration(event)">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--gray-200); display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="fas fa-user" style="color: var(--primary);"></i> Personal Information
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div class="form-group">
+                                <label>First Name <span class="required">*</span></label>
+                                <input type="text" name="firstName" required placeholder="John">
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name <span class="required">*</span></label>
+                                <input type="text" name="lastName" required placeholder="Doe">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Email Address <span class="required">*</span></label>
+                            <input type="email" name="email" required placeholder="john.doe@example.com">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Phone Number <span class="required">*</span></label>
+                            <input type="tel" name="phone" required placeholder="+91 98765 43210">
+                        </div>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin: 2rem 0 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--gray-200); display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="fas fa-info-circle" style="color: var(--primary);"></i> Additional Details
+                        </h3>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Number of Tickets <span class="required">*</span></label>
+                            <select name="tickets" id="regTickets" onchange="updateRegTotal()">
+                                <option value="1">1 Ticket</option>
+                                <option value="2">2 Tickets</option>
+                                <option value="3">3 Tickets</option>
+                                <option value="4">4 Tickets</option>
+                                <option value="5">5 Tickets</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label>Dietary Requirements (if any)</label>
+                            <input type="text" name="dietary" placeholder="Vegetarian, Vegan, Gluten-free, etc.">
+                        </div>
+                        <div style="background: var(--bg); padding: 1.5rem; border-radius: var(--radius-lg); margin: 2rem 0; border: 2px dashed var(--gray-300);">
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;">
+                                <span>Ticket Price:</span>
+                                <span id="regTicketPrice">₹0</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; color: var(--gray-600); font-size: 0.875rem;">
+                                <span>Quantity:</span>
+                                <span id="regQty">1</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 0.75rem 0 0; margin-top: 0.75rem; border-top: 2px solid var(--gray-300); font-size: 1.25rem; font-weight: 800; color: var(--gray-900);">
+                                <span>Total:</span>
+                                <span id="regTotal">₹0</span>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-check-circle"></i> Complete Registration</button>
+                            <button type="button" onclick="showPage('events')" class="btn btn-ghost btn-lg">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS PAGE -->
+    <div id="pageSuccess" style="display: none;">
+        <div style="padding: calc(72px + 4rem) 0 6rem; background: linear-gradient(135deg, var(--bg) 0%, var(--primary-lighter) 100%); min-height: 100vh;">
+            <div class="container">
+                <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <div style="width: 100px; height: 100px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--success) 0%, #059669 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; font-size: 3rem; color: white; box-shadow: 0 20px 25px -5px rgba(16,185,129,0.3); animation: scaleIn 0.5s ease;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem; color: var(--gray-900);">Registration Confirmed!</h1>
+                    <p style="color: var(--gray-600); font-size: 1.125rem; margin-bottom: 2.5rem;">You have successfully registered for <strong id="successEventTitle">Event</strong>.</p>
+
+                    <div style="background: var(--surface); border-radius: var(--radius-2xl); overflow: hidden; box-shadow: var(--shadow-xl); margin-bottom: 2.5rem; text-align: left; border: 1px solid var(--gray-200); position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);"></div>
+                        <div style="background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%); color: white; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 700; letter-spacing: 0.1em; font-size: 0.75rem; text-transform: uppercase;">EVENT TICKET</span>
+                            <span id="ticketId" style="font-family: monospace; font-size: 0.875rem; opacity: 0.8; background: rgba(255,255,255,0.1); padding: 0.25rem 0.75rem; border-radius: var(--radius);">#ABC123</span>
+                        </div>
+                        <div style="padding: 2rem;">
+                            <h3 id="ticketEventTitle" style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--gray-900);">Event Title</h3>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-user" style="width: 24px; color: var(--primary);"></i>
+                                <span id="ticketName">John Doe</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-envelope" style="width: 24px; color: var(--primary);"></i>
+                                <span id="ticketEmail">john@example.com</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-ticket-alt" style="width: 24px; color: var(--primary);"></i>
+                                <span id="ticketQty">1 Ticket(s)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-calendar" style="width: 24px; color: var(--primary);"></i>
+                                <span id="ticketDateTime">Date | Time</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fas fa-map-marker-alt" style="width: 24px; color: var(--primary);"></i>
+                                <span id="ticketLocation">Location</span>
+                            </div>
+                        </div>
+                        <div style="background: var(--bg); padding: 1.25rem 2rem; display: flex; justify-content: space-between; align-items: center; color: var(--gray-500); font-size: 0.875rem; border-top: 2px dashed var(--gray-300); position: relative;">
+                            <span id="ticketRegDate">Registered: Today</span>
+                            <span id="ticketTotal" style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">₹0</span>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--surface); border-radius: var(--radius-xl); padding: 2rem; box-shadow: var(--shadow); border: 1px solid var(--gray-200); margin-bottom: 2.5rem;">
+                        <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--gray-900);"><i class="fas fa-qrcode" style="color: var(--primary); margin-right: 0.5rem;"></i> Scan for Check-in</h3>
+                        <div class="qr-container" id="qrCodeContainer"></div>
+                        <p style="text-align: center; color: var(--gray-500); font-size: 0.875rem; margin-top: 1rem;">Present this QR code at the event entrance</p>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="showPage('events')" class="btn btn-primary"><i class="fas fa-calendar"></i> Browse More Events</button>
+                        <button onclick="window.print()" class="btn btn-ghost"><i class="fas fa-print"></i> Print Ticket</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EVENT DETAIL MODAL -->
+    <div class="modal-overlay" id="eventModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-calendar-star"></i> EventHub</h3>
+                    <p>The modern platform for planning, promoting, and managing events.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a onclick="showPage('home')">Home</a></li>
+                        <li><a onclick="showPage('events')">Browse Events</a></li>
+                        <li><a onclick="showPage('create')">Create Event</a></li>
+                        <li><a onclick="showPage('dashboard')">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a onclick="showPage('events')">Music & Concerts</a></li>
+                        <li><a onclick="showPage('events')">Sports & Fitness</a></li>
+                        <li><a onclick="showPage('events')">Business</a></li>
+                        <li><a onclick="showPage('events')">Technology</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 EventHub. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const sampleEvents = [
+            { id: '1', title: 'Summer Music Festival 2026', category: 'music', price: 3500, date: '2026-07-15', time: '14:00', location: 'Central Park Amphitheater', attendees: 2340, image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800' },
+            { id: '2', title: 'Jazz & Blues Evening', category: 'music', price: 4500, date: '2026-07-30', time: '20:00', location: 'Blue Note Lounge', attendees: 95, image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800' },
+            { id: '3', title: 'Marathon Training Group', category: 'sports', price: 0, date: '2026-06-18', time: '07:00', location: 'Riverside Park', attendees: 34, image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800' },
+            { id: '4', title: 'Yoga & Wellness Retreat', category: 'sports', price: 10000, date: '2026-07-22', time: '08:00', location: 'Serenity Mountain Resort', attendees: 35, image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800' },
+            { id: '5', title: 'Tech Startup Networking Night', category: 'business', price: 0, date: '2026-06-25', time: '18:30', location: 'WeWork Downtown', attendees: 89, image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800' },
+            { id: '6', title: 'Gourmet Food & Wine Festival', category: 'food', price: 6000, date: '2026-08-10', time: '12:00', location: 'Harbor Convention Center', attendees: 1200, image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800' },
+            { id: '7', title: 'Wine & Paint Night', category: 'arts', price: 2800, date: '2026-06-20', time: '19:00', location: 'Art Studio 42', attendees: 28, image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800' },
+            { id: '8', title: 'AI & Machine Learning Summit', category: 'tech', price: 16500, date: '2026-09-15', time: '09:00', location: 'Tech Convention Center', attendees: 320, image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800' },
+            { id: '9', title: 'Data Science Bootcamp', category: 'education', price: 24800, date: '2026-09-01', time: '09:00', location: 'Code Academy Campus', attendees: 45, image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800' },
+            { id: '10', title: 'Charity Gala: Night of Hope', category: 'other', price: 12500, date: '2026-10-15', time: '19:00', location: 'Crystal Ballroom', attendees: 280, image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800' }
+        ];
+
+        let allEvents = [];
+        let currentPage = 'home';
+
+        function getEvents() {
+            const stored = localStorage.getItem('eventHub_events');
+            if (stored) {
+                try {
+                    const events = JSON.parse(stored);
+                    if (Array.isArray(events) && events.length > 0) return events;
+                } catch (e) {}
+            }
+            localStorage.setItem('eventHub_events', JSON.stringify(sampleEvents));
+            return sampleEvents;
+        }
+
+        function saveEvents(events) {
+            localStorage.setItem('eventHub_events', JSON.stringify(events));
+        }
+
+        function getCategoryName(cat) {
+            const names = { music: 'Music & Concerts', sports: 'Sports & Fitness', business: 'Business & Networking', food: 'Food & Drink', arts: 'Arts & Culture', tech: 'Technology', education: 'Education', other: 'Other' };
+            return names[cat] || cat;
+        }
+
+        function formatPrice(price) {
+            return price === 0 ? 'Free' : '₹' + price.toLocaleString('en-IN');
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function createEventCard(event) {
+            const isFree = event.price === 0;
+            return `
+                <div class="event-card" data-category="${event.category}" data-price="${isFree ? 'free' : 'paid'}">
+                    <div class="event-image-wrapper">
+                        <img src="${event.image}" alt="${event.title}" class="event-image" onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'">
+                        <div class="event-image-overlay"></div>
+                        <span class="event-price-tag ${isFree ? 'free' : ''}">${formatPrice(event.price)}</span>
+                        <span class="badge badge-primary event-category-tag">${getCategoryName(event.category)}</span>
+                    </div>
+                    <div class="event-content">
+                        <h3 class="event-title" style="cursor: pointer;" onclick="showEventModal('${event.id}')">${event.title}</h3>
+                        <div class="event-meta">
+                            <div class="event-meta-item"><i class="fas fa-calendar"></i><span>${formatDate(event.date)}</span></div>
+                            <div class="event-meta-item"><i class="fas fa-clock"></i><span>${event.time}</span></div>
+                            <div class="event-meta-item"><i class="fas fa-map-marker-alt"></i><span>${event.location}</span></div>
+                        </div>
+                        <div class="event-footer">
+                            <span class="event-attendees"><i class="fas fa-users"></i> ${event.attendees.toLocaleString('en-IN')} going</span>
+                            <span><span class="status-dot"></span> Open</span>
+                        </div>
+                        <button class="btn-register" onclick="showRegistration('${event.id}')">
+                            <i class="fas fa-ticket-alt"></i> Register Now
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFeaturedEvents() {
+            const container = document.getElementById('featuredEvents');
+            if (container) container.innerHTML = allEvents.slice(0, 6).map(createEventCard).join('');
+        }
+
+        function renderAllEvents() {
+            const container = document.getElementById('allEvents');
+            if (container) container.innerHTML = allEvents.map(createEventCard).join('');
+        }
+
+        function renderDashboard() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const totalEvents = allEvents.length;
+            const totalAttendees = allEvents.reduce((sum, e) => sum + (e.attendees || 0), 0);
+            const totalRevenue = allEvents.reduce((sum, e) => sum + ((e.price || 0) * (e.attendees || 0)), 0);
+            const upcomingEvents = allEvents.filter(e => new Date(e.date) >= today).length;
+
+            // Animate counters
+            animateCounter('totalEvents', totalEvents);
+            animateCounter('totalAttendees', totalAttendees);
+            animateCounter('totalRevenue', totalRevenue, '₹');
+            animateCounter('upcomingEvents', upcomingEvents);
+
+            // Render charts
+            setTimeout(renderCharts, 100);
+
+            const tbody = document.getElementById('dashboardTableBody');
+            if (tbody) {
+                tbody.innerHTML = allEvents.map(event => {
+                    const status = new Date(event.date) >= today ? 'upcoming' : 'past';
+                    return `
+                        <tr>
+                            <td><strong>${event.title}</strong><br><small style="color: var(--gray-500);">${event.location}</small></td>
+                            <td>${formatDate(event.date)}</td>
+                            <td><span class="badge badge-primary">${getCategoryName(event.category)}</span></td>
+                            <td>${event.attendees || 0}</td>
+                            <td><span class="badge ${status === 'upcoming' ? 'badge-success' : 'badge-danger'}">${status === 'upcoming' ? 'Upcoming' : 'Past'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function animateCounter(id, target, prefix = '') {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const duration = 1500;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const update = () => {
+                current += increment;
+                if (current < target) {
+                    el.textContent = prefix + Math.floor(current).toLocaleString('en-IN');
+                    requestAnimationFrame(update);
+                } else {
+                    el.textContent = prefix + target.toLocaleString('en-IN');
+                }
+            };
+            update();
+        }
+
+        function showPage(page) {
+            currentPage = page;
+            document.getElementById('pageHome').style.display = page === 'home' ? 'block' : 'none';
+            document.getElementById('pageEvents').style.display = page === 'events' ? 'block' : 'none';
+            document.getElementById('pageCreate').style.display = page === 'create' ? 'block' : 'none';
+            document.getElementById('pageDashboard').style.display = page === 'dashboard' ? 'block' : 'none';
+            document.getElementById('pageRegistration').style.display = page === 'registration' ? 'block' : 'none';
+            document.getElementById('pageSuccess').style.display = page === 'success' ? 'block' : 'none';
+
+            document.getElementById('navHome').classList.toggle('active', page === 'home');
+            document.getElementById('navEvents').classList.toggle('active', page === 'events');
+            document.getElementById('navCreate').classList.toggle('active', page === 'create');
+            document.getElementById('navDashboard').classList.toggle('active', page === 'dashboard');
+
+            window.scrollTo(0, 0);
+
+            if (page === 'events') renderAllEvents();
+            if (page === 'dashboard') renderDashboard();
+        }
+
+        function filterEvents() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+            const price = document.getElementById('priceFilter').value;
+            const cards = document.querySelectorAll('#allEvents .event-card');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.event-title').textContent.toLowerCase();
+                const loc = card.querySelectorAll('.event-meta-item')[2].textContent.toLowerCase();
+                const cat = card.getAttribute('data-category');
+                const pr = card.getAttribute('data-price');
+
+                let show = true;
+                if (search && !title.includes(search) && !loc.includes(search)) show = false;
+                if (category && cat !== category) show = false;
+                if (price && pr !== price) show = false;
+
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        function handleCreateEvent(e) {
+            e.preventDefault();
+            const form = e.target;
+            const newEvent = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                title: form.title.value,
+                category: form.category.value,
+                description: form.description.value,
+                date: form.date.value,
+                time: form.time.value,
+                duration: form.duration.value,
+                location: form.location.value,
+                address: form.address.value,
+                eventType: form.eventType.value,
+                price: parseFloat(form.price.value) || 0,
+                capacity: parseInt(form.capacity.value) || null,
+                themeColor: form.themeColor.value,
+                attendees: 0,
+                image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800',
+                createdAt: new Date().toISOString()
+            };
+
+            allEvents.unshift(newEvent);
+            saveEvents(allEvents);
+
+            showToast('Event created successfully!');
+            setTimeout(() => showPage('dashboard'), 1500);
+        }
+
+        function showToast(message) {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'toast success';
+            toast.innerHTML = '<i class="fas fa-check-circle"></i><span>' + message + '</span>';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        let currentRegEvent = null;
+
+        function showRegistration(eventId) {
+            currentRegEvent = allEvents.find(e => e.id === eventId);
+            if (!currentRegEvent) return;
+
+            document.getElementById('pageHome').style.display = 'none';
+            document.getElementById('pageEvents').style.display = 'none';
+            document.getElementById('pageCreate').style.display = 'none';
+            document.getElementById('pageDashboard').style.display = 'none';
+            document.getElementById('pageRegistration').style.display = 'block';
+            document.getElementById('pageSuccess').style.display = 'none';
+
+            document.getElementById('regEventImage').src = currentRegEvent.image;
+            document.getElementById('regEventTitle').textContent = currentRegEvent.title;
+            document.getElementById('regEventDate').textContent = formatDate(currentRegEvent.date);
+            document.getElementById('regEventTime').textContent = currentRegEvent.time;
+            document.getElementById('regEventLocation').textContent = currentRegEvent.location;
+            document.getElementById('regEventPrice').textContent = formatPrice(currentRegEvent.price);
+
+            updateRegTotal();
+            window.scrollTo(0, 0);
+        }
+
+        function updateRegTotal() {
+            if (!currentRegEvent) return;
+            const qty = parseInt(document.getElementById('regTickets').value);
+            document.getElementById('regQty').textContent = qty;
+            document.getElementById('regTicketPrice').textContent = formatPrice(currentRegEvent.price);
+            if (currentRegEvent.price === 0) {
+                document.getElementById('regTotal').textContent = 'Free';
+            } else {
+                document.getElementById('regTotal').textContent = '₹' + (currentRegEvent.price * qty).toLocaleString('en-IN');
+            }
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            if (!currentRegEvent) return;
+
+            const form = e.target;
+            const firstName = form.firstName.value;
+            const lastName = form.lastName.value;
+            const email = form.email.value;
+            const tickets = parseInt(form.tickets.value);
+            const total = currentRegEvent.price * tickets;
+
+            // Update attendee count
+            currentRegEvent.attendees += tickets;
+            saveEvents(allEvents);
+
+            // Generate ticket ID
+            const ticketId = '#' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+            // Show success page
+            document.getElementById('pageRegistration').style.display = 'none';
+            document.getElementById('pageSuccess').style.display = 'block';
+            window.scrollTo(0, 0);
+
+            document.getElementById('successEventTitle').textContent = currentRegEvent.title;
+            document.getElementById('ticketId').textContent = ticketId;
+            document.getElementById('ticketEventTitle').textContent = currentRegEvent.title;
+            document.getElementById('ticketName').textContent = firstName + ' ' + lastName;
+            document.getElementById('ticketEmail').textContent = email;
+            document.getElementById('ticketQty').textContent = tickets + ' Ticket(s)';
+            document.getElementById('ticketDateTime').textContent = formatDate(currentRegEvent.date) + ' | ' + currentRegEvent.time;
+            document.getElementById('ticketLocation').textContent = currentRegEvent.location;
+            document.getElementById('ticketRegDate').textContent = 'Registered: ' + new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            document.getElementById('ticketTotal').textContent = currentRegEvent.price === 0 ? 'Free' : '₹' + total.toLocaleString('en-IN');
+
+            // Generate QR Code
+            setTimeout(() => {
+                generateQRCode(ticketId + '-' + currentRegEvent.title, 'qrCodeContainer');
+            }, 100);
+
+            // Fire confetti
+            fireConfetti();
+
+            showToast('Registration successful! 🎉');
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            allEvents = getEvents();
+            renderFeaturedEvents();
+            renderDashboard();
+            initDarkMode();
+            animateCounters();
+        });
+
+        // Dark Mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const toggle = document.getElementById('darkModeToggle');
+            toggle.classList.toggle('active');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        function initDarkMode() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').classList.add('active');
+            }
+        }
+
+        // Animated Counters
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current).toLocaleString('en-IN');
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target.toLocaleString('en-IN');
+                        counter.classList.add('animated');
+                        setTimeout(() => counter.classList.remove('animated'), 300);
+                    }
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        updateCounter();
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(counter);
+            });
+        }
+
+        // Modal Functions
+        function showEventModal(eventId) {
+            const event = allEvents.find(e => e.id === eventId);
+            if (!event) return;
+
+            const modal = document.getElementById('eventModal');
+            const body = document.getElementById('modalBody');
+
+            body.innerHTML = `
+                <div style="position: relative;">
+                    <img src="${event.image}" style="width: 100%; height: 300px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'">
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 2rem;">
+                        <span class="badge badge-primary">${getCategoryName(event.category)}</span>
+                        <h2 style="color: white; font-size: 2rem; font-weight: 800; margin-top: 0.5rem;">${event.title}</h2>
+                    </div>
+                </div>
+                <div style="padding: 2rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg); border-radius: var(--radius-lg);">
+                            <i class="fas fa-calendar" style="color: var(--primary); font-size: 1.25rem;"></i>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Date</div>
+                                <div style="font-weight: 700;">${formatDate(event.date)}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg); border-radius: var(--radius-lg);">
+                            <i class="fas fa-clock" style="color: var(--primary); font-size: 1.25rem;"></i>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Time</div>
+                                <div style="font-weight: 700;">${event.time}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg); border-radius: var(--radius-lg);">
+                            <i class="fas fa-map-marker-alt" style="color: var(--primary); font-size: 1.25rem;"></i>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Location</div>
+                                <div style="font-weight: 700;">${event.location}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg); border-radius: var(--radius-lg);">
+                            <i class="fas fa-ticket-alt" style="color: var(--primary); font-size: 1.25rem;"></i>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500); text-transform: uppercase;">Price</div>
+                                <div style="font-weight: 700;">${formatPrice(event.price)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="color: var(--gray-600); line-height: 1.8; margin-bottom: 2rem; font-size: 1.125rem;">${event.description || 'No description available.'}</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button onclick="closeModal(); showRegistration('${event.id}');" class="btn btn-primary btn-lg"><i class="fas fa-ticket-alt"></i> Register Now</button>
+                        <button onclick="closeModal();" class="btn btn-ghost btn-lg">Close</button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('eventModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Confetti on success
+        function fireConfetti() {
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#6366f1', '#ec4899', '#10b981', '#f59e0b']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#6366f1', '#ec4899', '#10b981', '#f59e0b']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        // Generate QR Code
+        function generateQRCode(text, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: text,
+                width: 128,
+                height: 128,
+                colorDark: '#1e293b',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Render Charts
+        function renderCharts() {
+            const ctx = document.getElementById('revenueChart');
+            if (!ctx) return;
+
+            const categories = {};
+            allEvents.forEach(e => {
+                const cat = getCategoryName(e.category);
+                categories[cat] = (categories[cat] || 0) + ((e.price || 0) * (e.attendees || 0));
+            });
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#f97316'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
+                    }
+                }
+            });
+        }
+
+        // Enhanced Toast
+        function showToast(message, type = 'success') {
+            let container = document.querySelector('.toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.style.position = 'relative';
+            toast.style.overflow = 'hidden';
+            const icons = { success: 'fa-check-circle', error: 'fa-times-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+            toast.innerHTML = `
+                <i class="fas ${icons[type] || icons.success}"></i>
+                <span>${message}</span>
+                <div class="toast-progress"></div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+<button class="fab" onclick="showPage('create')" title="Create New Event">
+        <i class="fas fa-plus"></i>
+    </button>
+</body>
+</html>
